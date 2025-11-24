@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoHub • ONG + Comunidad</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <header>
+    <div class="container row">
+      <div class="brand">
+        <div class="brand-badge">🌿</div>
+        <div>
+          <div style="font-weight:700;color:#065f46">EcoHub</div>
+          <div class="muted">ONG • Comunidad</div>
+        </div>
+      </div>
+      <div class="row" style="gap:12px;align-items:center">
+        <div id="sessionStatus" class="muted">No has iniciado sesión</div>
+        <button id="logoutBtn" class="btn btn-ghost hidden">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" id="appRoot"></main>
+
+  <footer>Hecho con ❤ para ONG y usuarios que cuidan el planeta.</footer>
+
+  <template id="loginTpl">
+    <div class="center">
+      <div class="card" style="width:min(560px,92vw)">
+        <div class="row" style="margin-bottom:12px">
+          <div class="brand"><div class="brand-badge">🌿</div><div><div style="font-weight:700;color:#065f46">EcoHub</div><div class="muted">ONG • Comunidad</div></div></div>
+          <div class="muted">v1.4</div>
+        </div>
+        <h2 style="margin:0 0 4px 0">Iniciar sesión</h2>
+        <p class="muted" style="margin:0 0 12px 0">Ingresa como <b>ONG</b> o <b>Usuario</b>.</p>
+        <div class="grid">
+          <div>
+            <label class="muted">Tipo de cuenta</label>
+            <select id="roleSel">
+              <option value="usuario">Usuario</option>
+              <option value="ong">ONG</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted">Correo</label>
+            <input id="emailInp" type="email" placeholder="tucorreo@ejemplo.com" required />
+          </div>
+          <div>
+            <label class="muted">Contraseña</label>
+            <input id="passInp" type="password" placeholder="••••••••" required />
+          </div>
+          <div class="row" style="gap:8px">
+            <button class="btn btn-primary" id="loginBtn">Entrar</button>
+            <button class="btn btn-ghost" id="regBtn">Crear cuenta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="homeTpl">
+    <div class="grid" style="gap:16px">
+      <div class="tabs" id="tabs"></div>
+      <section id="view"></section>
+    </div>
+  </template>
+
+  <!-- Views -->
+  <template id="inicioTpl">
+    <div class="grid" style="gap:20px">
+      <!-- Sección Principal -->
+      <div>
+        <h2 style="margin:0 0 16px 0;color:#065f46">¿Qué puedes hacer?</h2>
+        <div class="grid grid-4" id="mainCards">
+          <div class="feature-card" data-goto="calc">
+            <div class="feature-icon">🌱</div>
+            <div style="font-weight:600;font-size:16px;margin-bottom:6px">Calculadora ambiental</div>
+            <div class="muted small">Estima tu huella de carbono y recibe recomendaciones personalizadas</div>
+          </div>
+          <div class="feature-card" data-goto="jobs">
+            <div class="feature-icon">💼</div>
+            <div style="font-weight:600;font-size:16px;margin-bottom:6px">Trabajos verdes</div>
+            <div class="muted small">Encuentra oportunidades laborales en el sector ambiental</div>
+          </div>
+          <div class="feature-card" data-goto="news">
+            <div class="feature-icon">📰</div>
+            <div style="font-weight:600;font-size:16px;margin-bottom:6px">Noticias</div>
+            <div class="muted small">Lo más reciente del sector ambiental y sustentable</div>
+          </div>
+          <div class="feature-card" data-goto="map">
+            <div class="feature-icon">🗺️</div>
+            <div style="font-weight:600;font-size:16px;margin-bottom:6px">Mapa ambiental</div>
+            <div class="muted small">Explora puntos de reforestación, monitoreo y educación</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actividad Reciente -->
+      <div id="recentActivity">
+        <h3 style="margin:0 0 16px 0;color:#065f46">Actividad Reciente</h3>
+        <div id="activityList" class="grid" style="gap:10px"></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="calcTpl">
+    <div class="grid" style="gap:16px">
+      <div class="grid grid-3">
+        <div class="card"><div style="font-weight:600;margin-bottom:6px">Transporte (km/mes)</div><input id="kmMes" type="number" min="0" value="0"><div class="muted" style="margin-top:6px">Factor: 0.192 kg CO₂e/km</div></div>
+        <div class="card"><div style="font-weight:600;margin-bottom:6px">Energía (kWh/mes)</div><input id="kWhMes" type="number" min="0" value="0"><div class="muted" style="margin-top:6px">Factor: 0.42 kg CO₂e/kWh</div></div>
+        <div class="card"><div style="font-weight:600;margin-bottom:6px">Residuos (kg/mes)</div><input id="kgRes" type="number" min="0" value="0"><div class="muted" style="margin-top:6px">Factor: 1.9 kg CO₂e/kg</div></div>
+      </div>
+      <div class="card">
+        <div class="grid grid-4" style="text-align:center">
+          <div><div class="muted">Transporte</div><div id="outT" style="font-weight:800">0.0 kg</div></div>
+          <div><div class="muted">Energía</div><div id="outE" style="font-weight:800">0.0 kg</div></div>
+          <div><div class="muted">Residuos</div><div id="outR" style="font-weight:800">0.0 kg</div></div>
+          <div><div class="muted">Total (mes)</div><div id="outTotal" style="font-weight:800;color:var(--emerald)">0.0 kg</div></div>
+        </div>
+        <div style="margin-top:8px;text-align:center" class="muted">≈ <span id="outTon">0.000</span> t CO₂e/mes</div>
+      </div>
+      <div class="grid grid-3">
+        <div class="card"><div style="font-weight:600">Recomendación</div><div class="muted">Comparte vehículo o usa transporte público 2 días/semana: -15–25% km.</div></div>
+        <div class="card"><div style="font-weight:600">Energía</div><div class="muted">Cambia a LED y desconecta cargadores: hasta -10% consumo.</div></div>
+        <div class="card"><div style="font-weight:600">Residuos</div><div class="muted">Separa orgánicos/reciclables. Compostar 50% reduce emisiones.</div></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="jobsTpl">
+    <div class="grid" style="gap:16px">
+      <div class="row" style="gap:8px;align-items:center">
+        <div class="badge badge-green">💼 Trabajos Verdes</div>
+        <button id="createJobBtn" class="btn btn-primary hidden" style="margin-left:auto">+ Crear vacante</button>
+      </div>
+      <div class="row" style="gap:8px;align-items:stretch">
+        <div style="flex:1" class="row card"><input id="jobsQ" placeholder="Buscar por cargo, ONG o ciudad" /></div>
+        <select id="jobsMode" style="max-width:180px"><option value="todos">Todos</option><option value="remoto">Remoto</option><option value="híbrido">Híbrido</option><option value="presencial">Presencial</option><option value="campo">Campo</option></select>
+      </div>
+      <div id="jobsList" class="grid"></div>
+      <div id="jobsPager" class="row" style="justify-content:center;gap:8px"></div>
+    </div>
+  </template>
+
+  <template id="newsTpl">
+    <div class="grid" style="gap:16px">
+      <div class="row" style="gap:8px;align-items:center">
+        <div class="badge badge-green">📰 Noticias</div>
+        <button id="createNewsBtn" class="btn btn-primary hidden" style="margin-left:auto">+ Crear noticia</button>
+      </div>
+      <div id="newsList" class="grid"></div>
+      <div id="newsPager" class="row" style="justify-content:center;gap:8px"></div>
+    </div>
+  </template>
+
+  <template id="mapTpl">
+    <div class="grid" style="gap:16px">
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <div class="row" style="gap:8px;align-items:center"><span class="muted">Filtro</span>
+          <select id="mapFilter"><option value="todos">Todos</option><option>Reforestación</option><option>Monitoreo</option><option>Educación</option></select>
+        </div>
+        <span id="adminChip" class="badge badge-blue hidden">Modo administrador</span>
+        <button id="addPointBtn" class="btn btn-primary hidden" style="margin-left:auto">+ Añadir punto</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="map" style="width:100%;height:380px;position:relative;z-index:1"></div>
+      </div>
+      <div id="pointsList" class="grid grid-3"></div>
+    </div>
+  </template>
+
+  <template id="perfilTpl">
+    <div class="grid" style="gap:16px">
+      <div class="card" id="profileCard"></div>
+      <div id="perfilActions" class="grid grid-3"></div>
+    </div>
+  </template>
+
+  <!-- modal base -->
+  <div id="modalRoot" class="hidden"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
